@@ -44,7 +44,7 @@ To set up this project locally, follow these steps:
 
 1. Weather Data Retrieval: Use the provided modules to fetch short-term weather forecasts from the NOAA and ECMWF websites. Customize the parameters, such as location and forecast duration, as per your requirements.
 
-2. Data Cleaning: Utilize the data cleaning scripts and functions to preprocess the retrieved weather forecast data. This step ensures consistency in period and units.
+2. Data Processing: Utilize the data processing scripts and functions to preprocess the retrieved weather forecast data. This step ensures consistency in period and units.
 
 3. Data Storage: Data is originally comes in GRIB files and it is saved to `data/raw/provider` folder. After cleaning, data is stored as a netcdf file under `data/interim`.
 
@@ -62,4 +62,4 @@ Contributions are welcome! If you would like to contribute to this project, plea
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE). Feel free to modify and distribute this project in accordance with the terms of the license.
+This project is licensed under the [GNU License](LICENSE). Feel free to modify and distribute this project in accordance with the terms of the license.
