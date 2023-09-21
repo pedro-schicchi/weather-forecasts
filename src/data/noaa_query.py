@@ -36,10 +36,8 @@ class QueryNOAA:
 
     def get_forecast(self, number_of_days, out_dir):
         for valid_time in range(6, number_of_days*24 + 1, 6):
-            print(f'\r{valid_time} hours', end='')
+            print(f'\r--{valid_time} hours', end='')
             self.get_file(valid_time, out_dir)
-            
-        print('\n')
   
 # actual
 # https://nomads.ncep.noaa.gov/cgi-bin/filter_gefs_atmos_0p50a.pl?dir=/gefs.20230609/00/atmos/pgrb2ap5&file=geavg.t00z.pgrb2a.0p50.f006&var_APCP=on&all_lev=on

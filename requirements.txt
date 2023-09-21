@@ -1,0 +1,5 @@
+conda install -c anaconda urllib3
+conda install -c anaconda xarray
+conda install -c conda-forge cartopy
+conda install -c conda-forge matplotlib
+conda install -c conda-forge python-pptx

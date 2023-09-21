@@ -1,40 +1,96 @@
 # standard libraries
 import os
-# from time import perf_counter
+from time import perf_counter
 
 # third party libraries
-# import numpy as np
 import pandas as pd
-# 
 
 # custom libraries
 from utils import delete_all_files
 from data.noaa_query import QueryNOAA
-from data.noaa_preprocess import PreProcessNOAA
-    
+from features.noaa_preprocess import PreProcessNOAA
+from visualization.generate_charts import WeatherMap
+from visualization.generate_reports import GenerateReports
+
+variable_labels = {
+    'tp':None,
+    't2m':None,
+    'tp_anom':'Precip. Anomaly (mm/day from normal)',
+    't2m_anom':'Temp. Anomaly (°C from normal)',
+    }
+
+# 
+
+
 if __name__ == '__main__':
-    # inputs
+    # globals
+    start = perf_counter()
     today = pd.Timestamp.today()
-    run_hour = 0 # 0, 6, 12, 18
+    
+    # inputs
+    # run_hour = int(input('Forecast run hour (0, 6, 12, 18): ') or '0')
+    # vars_to_plot = input('Variables to plot (tp, t2m, tp_anom, t2m_anom): ').split() or ['tp_anom', 't2m_anom']
+    # regions_to_plot = input(f'Regions to plot ({", ".join(region_params.index)}): ').split() or ['north_america', 'europe', 'south_america', 'southeast_asia']
+    
+    # standard paramaters to print
+    run_hour = 0
+    vars_to_plot = ['tp_anom', 't2m_anom']
+    regions_to_plot = ['north_america','central_america', 'south_america',  'europe', 'india', 'southeast_asia', 'australia']
+    languages_to_plot = ['en', 'pt']
 
     # set directory
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    DATA_DIR = os.path.join(BASE_DIR, '..', 'data', 'raw', 'gefs')
-    OUTPUT_DIR = os.path.join(BASE_DIR, '..', 'data', 'processed', 'gefs')
+    BASE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+    REF_DIR = os.path.join(BASE_DIR, 'references')
+    RAW_DIR = os.path.join(BASE_DIR, 'data', 'raw', 'gefs')
+    INT_DIR = os.path.join(BASE_DIR, 'data', 'interim', 'gefs')
+    REP_DIR = os.path.join(BASE_DIR, 'reports')
+    FIG_DIR = os.path.join(BASE_DIR, 'reports', 'figures', 'gefs_fcst')
     
-    # delete old runs - for space
-    delete_all_files(DATA_DIR)
+    # manual parameters are taken from an excel file, as it is easier for the user to change
+    with pd.ExcelFile(os.path.join(REF_DIR, 'manual_inputs.xlsx')) as xl:
+        region_params = xl.parse(sheet_name='regions', index_col=0)
+        color_codes = xl.parse(sheet_name='colors', index_col=0)
+        image_files = xl.parse(sheet_name='images')
+        xl.close()
     
-    # download new run
-    print('getting new data')
-    query = QueryNOAA(start_date=today, run_cycle=run_hour)
-    query.get_forecast(number_of_days=15, out_dir=DATA_DIR)
+    # %% download new run
     
-    # preprocess data
-    print('processing data')
-    noaa = PreProcessNOAA()
-    noaa.load(DATA_DIR)
-    noaa.preprocess()
-    noaa.save(OUTPUT_DIR)
+    # print('getting new data')
+    # delete_all_files(RAW_DIR)
+    # query = QueryNOAA(start_date=today, run_cycle=run_hour)
+    # query.get_forecast(number_of_days=15, out_dir=RAW_DIR)
+    # print(f'--time passed = {perf_counter()-start:.2f}')
     
+    # # %% preprocess data
     
+    # print('processing data')
+    # noaa = PreProcessNOAA()
+    # ds = noaa.load(RAW_DIR)
+    # ds = noaa.preprocess()
+    # ds = noaa.calculate_anomalies(os.path.join(REF_DIR, 'era5_ref') )
+    # noaa.save(INT_DIR)
+    # print(f'--time passed = {perf_counter()-start:.2f}')
+    
+    # # %% plot map
+    
+    # print('plotting map')
+    # maps = WeatherMap(data_dir=INT_DIR, region_params=region_params, color_codes=color_codes)
+    # # plot every region-variable combination
+    # for region in regions_to_plot:
+    #     for variable in vars_to_plot:
+    #         label = variable_labels[variable]        
+    #         fig = maps.plot_map(region=region,step_range=('1 days','7 days'), variable=variable, cbar_label=label)
+    #         fig.savefig(os.path.join(FIG_DIR,f'{region}-{variable}.png'), bbox_inches='tight')
+    #         print(f'{region}-{variable}.png')
+            
+    # print(f'--time passed = {perf_counter()-start:.2f}')
+    
+    # %% updates ppt files
+        
+    print('updating ppt')
+    for lang in languages_to_plot:
+        ppt_file = os.path.join(REP_DIR, f'weather_report_{lang}.pptx')
+        
+        # updates figures in the ppt file placeholders
+        genrep = GenerateReports(ppt_file, image_files, fig_dir=FIG_DIR)
+        genrep.update_ppt()
