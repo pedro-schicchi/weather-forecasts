@@ -12,6 +12,21 @@ plt.rcParams['font.family'] = 'sans-serif'
 plt.rcParams['font.sans-serif'] = ['Montserrat']
 plt.rcParams['figure.figsize'] = width, width*0.76
 
+# variable_labels = {
+#     ['tp','en']:None,
+#     ['tp','pt']:None,
+    
+#     ['t2m','metric']:'Temperatura (°F)',
+#     ['t2m','pt']:'Temperatura (°F)',
+    
+#     ['tp_anom','en']:'Precip. Anomaly (mm/day from normal)',
+#     ['tp_anom','pt']:'Anomalia de Precip. (mm/dia do normal)',
+    
+#     ['t2m_anom','en']:'Temp. Anomaly (°F from normal)',
+#     ['t2m_anom','pt']:'Temp. Anomaly (°C do normal)',
+# }
+
+# Units
 def get_projections(proj_name, central_lon=-96, central_lat=39.0):
     try:
         projections = {
@@ -40,10 +55,14 @@ class WeatherMap:
         # transform given color scheme into rgb tuples
         if isinstance(color_scheme, str):
             color_lists = {
-                'tp':['white', 'yellow', 'green', 'blue'],
-                't2m':['red', 'grey', 'blue'],
-                'tp_anom':['orange', 'white',  'dark_blue'],
-                't2m_anom':['blue', 'white', 'red',],
+                'tp':['grey', 'white', 'light_green', 'dark_green', 'light_blue', 'blue', 'purple'],
+                't2m':['blue', 'light_blue', 'white', 'orange', 'red'],
+                
+                'tp_anom':['orange', 'white', 'dark_blue'],
+                't2m_anom':['blue', 'white', 'red'],
+                
+                'tp_anom_perc':['orange', 'white',  'dark_blue'],
+                't2m_anom_perc':['blue', 'white', 'red',],
             }
             rgb_tuples = [self.color_codes.loc[c_str, 'rgb'] for c_str in color_lists[color_scheme]]
         
@@ -85,7 +104,28 @@ class WeatherMap:
         
         return ds_agg, date_start, date_end
     
-    def plot_map(self, region, step_range, variable, title=None, cbar_label=None):
+    def convert_units(self, ds, unit_system='metric'):
+        ds_converted = ds.copy()
+        
+        if unit_system == 'metric':
+            # convert absolutes
+            ds_converted['t2m'] = ds_converted['t2m'] - 273.15
+        
+        elif unit_system == 'imperial':
+            # convert absolutes
+            ds_converted['t2m'] = (ds_converted['t2m'] - 273.15) * 9/5 + 32
+            ds_converted['tp'] = ds_converted['tp'] / 25.4
+            
+            # convert anomalies
+            ds_converted['t2m_anom'] = ds_converted['t2m_anom'] * 9/5
+            ds_converted['tp_anom'] = ds_converted['tp_anom'] / 25.4
+        
+        else:
+            raise AttributeError('Unrecognized unit system. Chose either metric or imperial')
+        
+        return  ds_converted
+    
+    def plot_map(self, region, step_range, variable, title=None, cbar_label=None, unit_system='metric'):
         # support variables
         get_keys = lambda dic, k_list: [dic[k] for k in k_list]    
         map_params = self.region_params.loc[region]
@@ -108,6 +148,8 @@ class WeatherMap:
         else:
             to_plot = self.raw_data.sel(x=slice(min_lon, max_lon), y=slice(min_lat, max_lat))
         to_plot, date_start, date_end = self.aggregate_steps(to_plot, step_range)
+        to_plot = self.convert_units(to_plot, unit_system)
+        
         
         # To plot borders and coastlines, we can use cartopy feature
         ax.add_feature(cf.COASTLINE.with_scale('50m'), lw=0.75)
@@ -123,10 +165,12 @@ class WeatherMap:
         # gl.left_labels = True   
         
         # Actually plots the dataset on top of the projection
+        extend = 'max' if variable=='tp' else 'both'
+        
         to_plot[variable].plot.contourf(
             ax=ax,
             transform=crs,
-            extend='both',
+            extend=extend,
             levels=15,
             robust=True,
             cmap=self.custom_cmap(variable),
