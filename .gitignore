@@ -1,0 +1,12 @@
+
+data/raw/gefs_fcst.nc
+data/raw/gefs/gefs_fcst.nc
+data/raw/cpc_ltm/tmin_ltm.nc
+data/raw/cpc_ltm/tmax_ltm.nc
+data/raw/cpc_ltm/tavg_ltm.nc
+data/raw/cpc_ltm/precip_ltm.nc
+data/raw/cpc/tmin_2023.nc
+data/raw/cpc/tmax_2023.nc
+data/raw/cpc/tavg_2023.nc
+data/raw/cpc/precip_2023.nc
+*.png
