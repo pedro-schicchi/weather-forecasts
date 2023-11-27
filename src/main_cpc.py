@@ -21,14 +21,14 @@ if __name__ == '__main__':
 
     # inputs
     region = 'south_america'
-    attribute = 'precip'
+    attribute = 'tavg'
     anomaly = True
     reload_ltm = False
-    reload_curr = False
-    periods = 14
+    reload_curr = True
+    periods = 30
     
     # input-dependent variables
-    # variable = 'tp' if attribute == 'precip' else 't2m'
+    variable = 'precip' if attribute == 'precip' else 'temp'
     doys = pd.date_range(end=end_date, periods=14, freq='D').day_of_year.to_list()
     figname = f'{region}_{attribute}_{periods}_{"anom" if anomaly else ""}.png'
     
@@ -57,16 +57,16 @@ if __name__ == '__main__':
         curr_fn=curr.out_file,
         ltm_fn=ltm.out_file
     )
-    da = cpc.get_array(doys, anomaly=anomaly)
+    da = cpc.get_array(doys, anomaly=anomaly,imperial=True)
 
     print('creating the weather map')
     maps = WeatherMap(
         data_array=da,
         attribute=attribute,
-        anomaly=anomaly
+        anomaly=anomaly,unit_system='imperial'
     )
     fig = maps.plot_map(
         region_meta=regions.get_region_meta(region),
-        cmap=colors.custom_cmap(attribute, anomaly)
+        cmap=colors.custom_cmap(variable, anomaly)
     )
     fig.savefig(os.path.join(FIG_DIR, figname), bbox_inches='tight')

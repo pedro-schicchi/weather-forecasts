@@ -104,29 +104,25 @@ class GetCpcLtm(GetCpc):
     def date2doy(self, date_array):
         return cftime.date2num(date_array, 'days since 1-1-1') + 1
 
-
+# %%
 if __name__ == '__main__':
     # inputs
     current_year = pd.Timestamp.today().year
-    reload_ltm = False
+    reload_ltm = True
 
     # define directories
     BASE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
     RAW_DIR = os.path.join(BASE_DIR, 'data', 'raw')
     
     # get curr year data
-    for att in ['precip', 'tmin', 'tmax', 'tavg']:
+    # for att in ['precip', 'tmin', 'tmax', 'tavg']:
+    for att in ['tmin', 'tmax', 'tavg']:
         print(f'GETTING {att.upper()}:')
 
         if reload_ltm:
-            ltm = GetCpcLtm(attribute=att)
-            ds = ltm.get_data(
-                os.path.join(RAW_DIR, 'cpc_ltm'),
-                delete_raw=True
-            )
+            ltm = GetCpcLtm(attribute=att, out_dir=os.path.join(RAW_DIR, 'cpc_ltm'))
+            ds = ltm.get_data(delete_raw=True)
 
-        curr = GetCpc(attribute=att, year=current_year)
-        curr.get_data(
-            out_dir=os.path.join(RAW_DIR, 'cpc'),
-            delete_raw=True
-        )
+        curr = GetCpcYear(attribute=att, year=current_year, out_dir=os.path.join(RAW_DIR, 'cpc'))
+        curr.get_data(delete_raw=True)
+# %%

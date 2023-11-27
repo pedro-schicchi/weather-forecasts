@@ -45,8 +45,10 @@ class WeatherMap:
         self.data_array = data_array
         self.attribute = attribute
         self.anomaly = anomaly
+        self.unit_system = unit_system
         self.variable = 'precip' if attribute == 'precip' else 'temp'
         self.extend = 'max' if self.variable == 'precip' and not anomaly else 'both'
+        
         
     def plot_map(self, region_meta, cmap=None, cbar_label=None, title=None, grid=False):
         

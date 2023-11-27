@@ -40,7 +40,7 @@ if __name__ == '__main__':
         start_date=today,
         number_of_days=15,
         run_cycle=run_hour)
-    query.get_data(RAW_DIR, delete_raw=True)
+    query.get_data(os.path.join(RAW_DIR, 'gefs'), delete_raw=True)
     print(f'\n--time passed = {perf_counter()-start:.2f}')
 
     # loop through images and plot
