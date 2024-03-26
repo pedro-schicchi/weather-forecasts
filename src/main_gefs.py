@@ -51,6 +51,7 @@ if __name__ == '__main__':
         attribute = row.attribute
         variable = 'precip' if attribute == 'precip' else 'temp'
         anomaly = row.anomaly
+        unit =  row.unit
         figname = row.filename
         cbar_label = row.label
         step_range = slice(f'{row.start} days', f'{row.end} days')
@@ -63,21 +64,25 @@ if __name__ == '__main__':
             fcst_fn=os.path.join(RAW_DIR, 'gefs', 'gefs_fcst.nc'),
             ltm_fn=os.path.join(RAW_DIR, 'cpc_ltm', f'{attribute}_ltm.nc'),
         )
-        fcst = noaa.get_array(step_range=step_range, anomaly=anomaly)
+        fcst = noaa.get_array(
+            step_range=step_range,
+            anomaly=anomaly,
+            unit_system=unit
+        )
         
-
         # plot map
         maps = WeatherMap(data_array=fcst, attribute=attribute, anomaly=anomaly)
         fig = maps.plot_map(
             region_meta=regions.get_region_meta(region),
             cmap=colors.custom_cmap(variable, anomaly),
-            cbar_label=cbar_label
+            cbar_label=cbar_label, 
+            eliminate_strange = False
         )
         fig.savefig(os.path.join(FIG_DIR, figname), bbox_inches='tight')
 
         # feedback to user
         print(f'--time passed = {perf_counter()-start:.2f}')
-    
+   
     # updates ppt files
     print('updating ppt')
     for lang in languages_to_plot:

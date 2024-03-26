@@ -1,4 +1,5 @@
 import os
+import numpy as np
 import pandas as pd
 import xarray as xr
 import matplotlib.pyplot as plt
@@ -40,6 +41,29 @@ def get_projections(proj_name, central_lon=-96, central_lat=39.0):
         print('Selected did not work, using standard "mercator"')
         return ccrs.Mercator()
 
+def eliminate_anomalies(da, threshold=2.5):
+
+    # Calculate mean and standard deviation along a specific dimension
+    mean_values = da.mean()
+    std_dev_values = da.std()
+
+    # Calculate z-scores
+    z_scores = (da - mean_values) / std_dev_values
+
+    # Identify outliers based on the threshold
+    outliers_mask = np.abs(z_scores) > threshold
+
+    # Replace outliers with NaN or some other value
+    da_no_outliers = xr.where(outliers_mask, np.nan, da)
+    
+    # # Linear interpolation for values below the threshold
+    # da_interp = da.where(~mask).interpolate_na(dim='your_dimension', method='linear')
+
+    # # Combine the original data with the interpolated values
+    # da_fixed = xr.where(mask, da_interp, da)
+
+    return da_no_outliers
+
 class WeatherMap:
     def __init__(self, data_array, attribute, anomaly=False, unit_system='metric'):
         self.data_array = data_array
@@ -50,7 +74,7 @@ class WeatherMap:
         self.extend = 'max' if self.variable == 'precip' and not anomaly else 'both'
         
         
-    def plot_map(self, region_meta, cmap=None, cbar_label=None, title=None, grid=False):
+    def plot_map(self, region_meta, cmap=None, cbar_label=None, title=None, grid=False, levels=15, robust=True, eliminate_strange=True):
         
         # support variables
         min_lon, max_lon, min_lat, max_lat = region_meta[['min_lon','max_lon','min_lat','max_lat']].to_list()
@@ -74,6 +98,10 @@ class WeatherMap:
         else:
             to_plot = self.data_array.sel(lon=slice(min_lon, max_lon), lat=slice(min_lat, max_lat))
         
+        # If asked, try to remove 'off' values
+        if eliminate_strange:
+            to_plot = eliminate_anomalies(to_plot)
+        
         # To plot borders and coastlines, we can use cartopy feature
         ax.add_feature(cf.COASTLINE.with_scale('50m'), lw=0.75)
         ax.add_feature(cf.BORDERS.with_scale('50m'), lw=0.75)
@@ -93,8 +121,9 @@ class WeatherMap:
             ax=ax,
             transform=crs,
             extend=self.extend,
-            levels=15,
-            robust=True,
+            levels=levels,
+            center=None,
+            robust=robust,
             cmap=cmap,
             cbar_kwargs={'location':'right', 'label':cbar_label},
         )

@@ -108,7 +108,7 @@ class GetCpcLtm(GetCpc):
 if __name__ == '__main__':
     # inputs
     current_year = pd.Timestamp.today().year
-    reload_ltm = True
+    reload_ltm = False
 
     # define directories
     BASE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..')
